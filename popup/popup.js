@@ -2,8 +2,12 @@
 const MEDIA_DOMAINS = [
   'aliexpress.com',
   'alibaba.com',
+  'aliexpress.us',
+  'aliexpress.ru',
+  'aliexpress.co.uk',
+  'aliexpress.ca',
   'alicdn.com',
-  'aliexpress.' // Catches .co.uk, .ru, etc
+  'aliexpress.' // SHOULD catch .ru, .co.uk, etc. but doesnt?
 ];
 
 function isSupportedSite(url) {

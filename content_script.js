@@ -69,3 +69,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getMedia") sendResponse(getMedia());
   return true;
 });
+
+// Debug: Log all potential media elements
+console.log("=== AliDL Debug ===");
+console.log("Page URL:", window.location.href);
+console.log("All Images:", 
+  Array.from(document.querySelectorAll('img'))
+    .map(img => img.src || img.dataset.src || 'no-src')
+    .filter(src => src !== 'no-src')
+);
+console.log("Video Elements:", 
+  Array.from(document.querySelectorAll('video, [data-video-url]'))
+);
