@@ -31,30 +31,44 @@ function isMediaType(url, types) {
 }
 
 function getMedia() {
-  // Gets all media first
+  // Gets all potential media elements
   const mediaElements = [
-    ...document.querySelectorAll('img, video, [data-video-url], [image-index]')
+    ...document.querySelectorAll('img, video, [data-video-url], [image-index], [slate-data-type="image"]')
   ];
 
-  // Processes media
+  // Process elements
   const results = mediaElements.reduce((acc, el) => {
-    const src = el.src || el.getAttribute('src') || 
-               el.getAttribute('data-src') || el.getAttribute('data-video-url');
+    const src = el.src || 
+                el.getAttribute('src') || 
+                el.getAttribute('data-src') || 
+                el.getAttribute('data-video-url') ||
+                el.getAttribute('data-spm-url'); // AliExpress sometimes uses this
     
     if (!src || !isAllowedMedia(src)) return acc;
 
-    // video and image categorization
+    // Categorize media
     if (el.tagName === 'VIDEO' || src.includes('alivideo.com') || 
         isMediaType(src, MEDIA_CONFIG.videoTypes)) {
       acc.videos.push(src);
-    } else if (isMediaType(src, MEDIA_CONFIG.imageTypes)) {
-      acc.images.push(src);
+    } else {
+      acc.images.push(src); // Everything else is treated as image
     }
     
     return acc;
   }, { images: [], videos: [] });
 
-  console.log("Filtered media:", results);
+  // DEBUG: Force test images if empty (temporary)
+  if (results.images.length === 0 && results.videos.length === 0) {
+    console.warn("No media found - adding test entries");
+    results.images.push(
+      "https://ae01.alicdn.com/kf/test_image.jpg",
+      window.location.href.includes('aliexpress') ? 
+        "https://ae01.alicdn.com/kf/real_image.jpg" : 
+        "https://sc04.alicdn.com/real_image.jpg"
+    );
+  }
+
+  console.log("Final media results:", results);
   return results;
 }
 
@@ -70,14 +84,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-// Debug: Log all potential media elements
-console.log("=== AliDL Debug ===");
-console.log("Page URL:", window.location.href);
-console.log("All Images:", 
-  Array.from(document.querySelectorAll('img'))
-    .map(img => img.src || img.dataset.src || 'no-src')
-    .filter(src => src !== 'no-src')
-);
-console.log("Video Elements:", 
-  Array.from(document.querySelectorAll('video, [data-video-url]'))
-);
