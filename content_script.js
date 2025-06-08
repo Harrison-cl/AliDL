@@ -1,49 +1,71 @@
-// Find images/videos on aliexpress / alibaba
 console.log("AliDL Content Script Loaded");
 
-// observer for lazy loading images
-const observer = new MutationObserver(() => {
-    console.log("DOM changed - images may have loaded");
-});
-observer.observe(document, { subtree: true, childList: true });
+// Configuration for media filtering
+const MEDIA_CONFIG = {
+  allowedDomains: ['alicdn.com', 'alivideo.com', 'alibaba.com', 'aliexpress-media.com'
+    , 'aliexpress.com', 'alibaba.com', 'aliexpress.ru', 'aliexpress.co', 'aliexpress.'
+  ],
+  requiredPaths: ['/item/', '/product/', '/wholesale/'],
+  imageTypes: ['_jpg', '.webp', '.png', '.jpg', '.jpeg', '.gif'], 
+  videoTypes: ['.mp4', '.webm', '.avi', '.mov', '.mkv', '.wmv', '.flv']
+};
 
-const allowedDomains = [
-  'aliexpress.com',
-  'aliexpress.us',
-  'alibaba.com',
-  'alicdn.com'
-  // can add more here if needed
-];
-
-function isAllowedUrl(url) {
+// url checker
+function isAllowedMedia(url) {
   try {
-    const domain = new URL(url).hostname;
-    return allowedDomains.some(d => domain.includes(d));
+    const { hostname } = new URL(url);
+    return (
+      MEDIA_CONFIG.allowedDomains.some(d => 
+        d.endsWith('.') ? hostname.startsWith(d) : hostname.includes(d)
+      ) &&
+      MEDIA_CONFIG.requiredPaths.some(p => url.includes(p))
+    );
   } catch {
     return false;
   }
 }
 
-
-
-function getMedia() {
-    const images = Array.from(document.querySelectorAll('img'))
-        .map(img => img.src)
-        .filter(src => isAllowedUrl(src));
-
-    console.log("Found images:", images);
-
-    const videos = Array.from(document.querySelectorAll('video source'))
-        .map(video => video.src);
-
-    return {images, videos};
+// media checker
+function isMediaType(url, types) {
+  return types.some(type => url.includes(type));
 }
 
+function getMedia() {
+  // Gets all media first
+  const mediaElements = [
+    ...document.querySelectorAll('img, video, [data-video-url], [image-index]')
+  ];
 
-//send URLs to popup.js
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "getMedia") {
-        sendResponse(getMedia());
+  // Processes media
+  const results = mediaElements.reduce((acc, el) => {
+    const src = el.src || el.getAttribute('src') || 
+               el.getAttribute('data-src') || el.getAttribute('data-video-url');
+    
+    if (!src || !isAllowedMedia(src)) return acc;
+
+    // video and image categorization
+    if (el.tagName === 'VIDEO' || src.includes('alivideo.com') || 
+        isMediaType(src, MEDIA_CONFIG.videoTypes)) {
+      acc.videos.push(src);
+    } else if (isMediaType(src, MEDIA_CONFIG.imageTypes)) {
+      acc.images.push(src);
     }
-    return true; // Keep the message channel open for sendResponse
+    
+    return acc;
+  }, { images: [], videos: [] });
+
+  console.log("Filtered media:", results);
+  return results;
+}
+
+// Lazy loading observer
+const observer = new MutationObserver(() => {
+  console.log("DOM changed - checking for new media");
+});
+observer.observe(document, { subtree: true, childList: true });
+
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "getMedia") sendResponse(getMedia());
+  return true;
 });

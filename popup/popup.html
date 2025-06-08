@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <link rel="stylesheet" href="popup.css">
+    </head>
 <body>
-    <button id="downloadBtn">Download</button>
-    <script src="popup.js"></script>
+  <div id="loading" style="display: none;">Loading media...</div>
+  <div id="imageSelection" style="max-height: 300px; overflow-y: auto; display: none;">
+    <!-- Images will appear here -->
+  </div>
+  <button id="downloadSelected" disabled>Download Selected</button>
+  <script src="popup.js"></script>
 </body>
 </html>
