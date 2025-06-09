@@ -1,3 +1,8 @@
+
+console.log("AliDL content script LOADED!");  // Simple sanity check
+document.body.style.border = "5px solid red";  // Visual confirmation
+
+
 //config
 const VIDEO_DOMAINS = {
   // Domains to allow (including all AliExpress regions)
@@ -85,3 +90,18 @@ function addDownloadButton(video) {
     video.parentElement.style.position = 'relative'; // ensure parent has position
     video.parentElement.appendChild(btn);
 }
+
+
+// shadow dom check 
+function checkShadowRoots() {
+  document.querySelectorAll('*').forEach(element => {
+    if (element.shadowRoot) {
+      console.log("Shadow root found!", element);
+      element.shadowRoot.addEventListener('mouseover', (e) => {
+        const video = e.target.closest('video');
+        if (video) console.log("VIDEO IN SHADOW DOM:", video.src);
+      }, true);
+    }
+  });
+}
+checkShadowRoots();
