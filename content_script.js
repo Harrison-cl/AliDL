@@ -22,10 +22,11 @@ function isBlobUrl(url) {
 async function handleBlobVideo(video) {
   try {
     const blob = await fetch(video.src).then(r => r.blob());
+    const extension = blob.type.split('/')[1] || 'mp4'; // Extract format from MIME type
     const objectUrl = URL.createObjectURL(blob);
-    addDownloadButton(objectUrl, "video.mp4"); // Trigger download
+    addDownloadButton(objectUrl, `video.${extension}`);
   } catch (error) {
-    console.error("Failed to fetch blob:", error);
+    console.error("Blob download failed:", error);
   }
 }
 
@@ -46,7 +47,7 @@ document.addEventListener('mouseover', (event) => {
 
 // check if video is from aliexpress / alibaba domains
 function isAliExpressVideo(src) {
-        return VIDEO_DOMAINS.some(domain => src.includes(domain));
+        return VIDEO_DOMAINS.allowedDomains.some(domain => src.includes(domain));
 }
 
 // add download button to video element
