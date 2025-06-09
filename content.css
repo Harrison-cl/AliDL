@@ -3,7 +3,7 @@
   position: absolute;
   bottom: 10px;
   right: 10px;
-  z-index: 1000;
+  z-index: 9999;
   background: rgba(0,0,0,0.7);
   color: white;
   border: none;
@@ -12,8 +12,6 @@
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s;
-}
-video:hover + .alidl-download-btn,
-.alidl-download-btn:hover {
-  opacity: 1;
+  font-size: 12px;
+  pointer-events: auto;
 }

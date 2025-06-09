@@ -1,107 +1,56 @@
-
-console.log("AliDL content script LOADED!");  // Simple sanity check
-document.body.style.border = "5px solid red";  // Visual confirmation
-
-
-//config
-const VIDEO_DOMAINS = {
-  // Domains to allow (including all AliExpress regions)
-  allowedDomains: [
-    'alicdn.com',
-    'alivideo.com',
-    'alibaba.com',
-    'aliexpress-media.com',
-    'videocdn.alibaba.com',
-    'ailiexpress.ru',
-    'aliexpress.us',
-    'aliexpress.' // Catches all .com, .us, .ru, etc.
-    // add more domains if needed
-  ],
-}
-
-// check if url is Blob
-function isBlobUrl(url) {
-  return url.startsWith('blob:');
-}
-
-// handle blob URL videos 
-async function handleBlobVideo(video) {
-  try {
-    const blob = await fetch(video.src).then(r => r.blob());
-    const extension = blob.type.split('/')[1] || 'mp4'; // Extract format from MIME type
-    const objectUrl = URL.createObjectURL(blob);
-    addDownloadButton(objectUrl, `video.${extension}`);
-  } catch (error) {
-    console.error("Blob download failed:", error);
-  }
-}
-
-// watch for mouseover events on video elements
-document.addEventListener('mouseover', (event) => {
-    const video = event.target.closest('video');
-    if(video && isAliExpressVideo(video.src)) {
-        if(isBlobUrl(video.src)) {
-            // if video is a Blob URL, we can't download it directly
-            console.log("Blob video detected - fetching data...");
-            handleBlobVideo(video);
-        }else {
-            // normal video URL
-          addDownloadButton(video);
-    }
-    }
-}, true); // use capture phase to catch dynamically loaded videos
-
-// check if video is from aliexpress / alibaba domains
-function isAliExpressVideo(src) {
-        return VIDEO_DOMAINS.allowedDomains.some(domain => src.includes(domain));
-}
-
-// add download button to video element
-function addDownloadButton(video) {
-    // check if button already exists
-    if(video._alidlButtonAdded) return;
-    video._alidlButtonAdded = true; // mark as added
-
+// content_script.js
+(function() {
+  // 1. Find all videos on page
+  const videos = document.querySelectorAll('video');
+  
+  // 2. Add download button to each
+  videos.forEach(video => {
+    if (video.dataset.alidlProcessed) return; // Skip if already processed
+    video.dataset.alidlProcessed = true;
+    
     const btn = document.createElement('button');
-    btn.className = 'alidl-download-btn';
-    btn.innerHTML = '⬇️'; // use a simple download icon
-
-    btn.onclick = (event) => {
-        event.stopPropagation(); // prevent video controls from showing
-        chrome.runtime.sendMessage({
-            action: 'downloadVideo',
-            url: video.src
-        }, (response) => {
-            if(response.success) {
-                alert('Video download started!');
-            } else {
-                alert('Failed to start download: ' + response.error);
-            }
-        });
+    btn.textContent = '⬇️ Download';
+    btn.style.cssText = `
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    `;
+    
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      downloadVideo(video.src);
     };
-
-    // temp console log for debugging
-    document.addEventListener('mouseover', (event) => {
-  console.log("Mouseover detected on:", event.target);
-  const video = event.target.closest('video');
-  if (video) console.log("Video found! SRC:", video.src);
-}, true);
-
-    video.parentElement.style.position = 'relative'; // ensure parent has position
+    
+    video.parentElement.style.position = 'relative';
     video.parentElement.appendChild(btn);
-}
-
-
-// shadow dom check 
-function checkShadowRoots() {
-  document.querySelectorAll('*').forEach(element => {
-    if (element.shadowRoot) {
-      console.log("Shadow root found!", element);
-      element.shadowRoot.addEventListener('mouseover', (e) => {
-        const video = e.target.closest('video');
-        if (video) console.log("VIDEO IN SHADOW DOM:", video.src);
-      }, true);
-    }
   });
-}
-checkShadowRoots();
+
+  // 3. Simple download function
+
+async function downloadVideo(url) {
+  if (url.startsWith('blob:')) {
+    try {
+      const blob = await fetch(url).then(r => r.blob());
+      url = URL.createObjectURL(blob);
+    } catch (e) {
+      alert('Failed to download blob video. Try right-clicking the video.');
+      return;
+    }
+  }
+  const filename = url.split('/').pop().split('?')[0] || `video_${Date.now()}.mp4`;
+    chrome.runtime.sendMessage({ action: 'download', url, filename });
+}}
+)();
+
+new MutationObserver(() => {
+  document.querySelectorAll('video:not([data-alidl-processed])').forEach(video => {
+    // Re-run the button adder
+  });
+}).observe(document.body, { childList: true, subtree: true });

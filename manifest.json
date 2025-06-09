@@ -22,11 +22,20 @@
       "*://*.aliexpress.co.uk/*",
       "*://*.aliexpress.ru/*",
       "*://*.aliexpress.co.jp/*",
-      "*://*.aliexpress-media.com/*"
+      "*://*.aliexpress-media.com/*",
+      "*://*.videocdn.alibaba.com/*",
+      "*://gv.videocdn.alibaba.com/*",
+      "*://videocdn.alibaba.com/*",
+      "*://s.alicdn.com/*",
+      "*://ae01.alicdn.com/*",
+      "*://ae02.alicdn.com/*",
+      "*://ae03.alicdn.com/*",
+      "*://ae04.alicdn.com/*"
     ],
     "js": ["content_script.js"],
     "css": ["content.css"],
-    "run_at": "document_idle"
+    "run_at": "document_idle",
+    "all_frames": true
   }],
   "background": {
     "service_worker": "background.js"
@@ -39,6 +48,14 @@
     "*://*.aliexpress.co.uk/*",
     "*://*.aliexpress.ru/*",
     "*://*.aliexpress.co.jp/*",
-    "*://*.aliexpress-media.com/*"
+    "*://*.aliexpress-media.com/*",
+    "*://*.videocdn.alibaba.com/*",
+    "*://gv.videocdn.alibaba.com/*",
+    "*://videocdn.alibaba.com/*",
+    "*://s.alicdn.com/*",
+    "*://ae01.alicdn.com/*",
+    "*://ae02.alicdn.com/*",
+    "*://ae03.alicdn.com/*",
+    "*://ae04.alicdn.com/*"
   ]
 }
