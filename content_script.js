@@ -1,8 +1,3 @@
-// content_script.js
-if (typeof window.AliDL_LOADED === 'undefined') {
-  window.AliDL_LOADED = true;
-}
-
 //config
 const VIDEO_DOMAINS = {
   // Domains to allow (including all AliExpress regions)
@@ -18,17 +13,43 @@ const VIDEO_DOMAINS = {
   ],
 }
 
+// watch for mouseover events on video elements
+document.addEventListener('mouseover', (event) => {
+    const video = event.target.closest('video');
+    if(video && isAliExpressVideo(video.src)) {
+        addDownloadButton(video);
+    }
+}, true); // use capture phase to catch dynamically loaded videos
 
-// video dection function main
+// check if video is from aliexpress / alibaba domains
+function isAliExpressVideo(src) {
+        return VIDEO_DOMAINS.some(domain => src.includes(domain));
+}
 
-function detectVideos() {
-     // Video detection logic will go here
-    console.log("AliDL video detector active");
-  }
+// add download button to video element
+function addDownloadButton(video) {
+    // check if button already exists
+    if(video._alidlButtonAdded) return;
+    video._alidlButtonAdded = true; // mark as added
 
-  // Run detection on load and when new content appears
-  document.addEventListener('DOMContentLoaded', detectVideos);
-  new MutationObserver(detectVideos).observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+    const btn = document.createElement('button');
+    btn.className = 'alidl-download-btn';
+    btn.innerHTML = '⬇️'; // use a simple download icon
+
+    btn.onclick = (event) => {
+        event.stopPropagation(); // prevent video controls from showing
+        chrome.runtime.sendMessage({
+            action: 'downloadVideo',
+            url: video.src
+        }, (response) => {
+            if(response.success) {
+                alert('Video download started!');
+            } else {
+                alert('Failed to start download: ' + response.error);
+            }
+        });
+    };
+
+    video.parentElement.style.position = 'relative'; // ensure parent has position
+    video.parentElement.appendChild(btn);
+}
