@@ -81,3 +81,14 @@ body {
     text-align: center;
     font-size: 14px;
 }
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.controls button {
+  padding: 5px 10px;
+  font-size: 12px;
+}

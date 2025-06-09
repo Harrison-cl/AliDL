@@ -38,13 +38,46 @@ async function fetchMedia() {
   return Promise.race([messagePromise, timeoutPromise]);
 }
 
-function renderMedia(media) {
+
+// Selection management
+function setAllCheckboxes(checked) {
+  document.querySelectorAll('#imageSelection input').forEach(checkbox => {
+    checkbox.checked = checked;
+  });
+}
+
+document.getElementById('selectAll').addEventListener('click', () => setAllCheckboxes(true));
+document.getElementById('deselectAll').addEventListener('click', () => setAllCheckboxes(false));
+
+// Thumbnail toggle
+document.getElementById('showThumbnails').addEventListener('change', (e) => {
+  const show = e.target.checked;
+  document.querySelectorAll('#imageSelection .media-item').forEach(item => {
+    if (item.dataset.isThumbnail === "true") {
+      item.style.display = show ? 'flex' : 'none';
+    }
+  });
+});
+
+function renderMedia(media = { images: [] }) {  // Default parameter
   const container = document.getElementById('imageSelection');
   container.innerHTML = '';
+
+  // Safety check
+  if (!media || !media.images) {
+    console.error('Invalid media data:', media);
+    return;
+  }
 
   media.images.forEach(img => {
     const div = document.createElement('div');
     div.className = 'media-item';
+    
+    // attempted thumbnail fix
+    const isThumbnail = img.includes('_50x50.') || img.includes('_thumbnail');
+    div.dataset.isThumbnail = isThumbnail;
+    div.style.display = isThumbnail ? 'none' : 'flex';
+
     div.innerHTML = `
       <input type="checkbox" id="${encodeURIComponent(img)}" checked>
       <label for="${encodeURIComponent(img)}">
@@ -62,22 +95,53 @@ async function handleLoad() {
   const loading = document.getElementById('loading');
   const downloadBtn = document.getElementById('downloadSelected');
 
-  // reset UI
+  // Reset UI
   container.innerHTML = '';
   loading.style.display = 'block';
   downloadBtn.disabled = true;
 
   try {
-    const media = await fetchMedia();
-    if (media.images.length === 0) {
-      throw new Error('No media found. Scroll down and try again.');
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (!tab?.url) {
+      throw new Error('No active tab found');
     }
+
+    // Primary attempt - normal message passing
+    let media;
+    try {
+      media = await chrome.tabs.sendMessage(tab.id, { action: "getMedia" });
+      console.log("Primary method results:", media);
+    } catch (e) {
+      console.warn("Message passing failed, trying direct scraping...");
+      // Fallback: Directly scrape images if messaging fails
+      media = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          return [...document.querySelectorAll('img')]
+            .map(img => img.src)
+            .filter(src => src && 
+              src.includes('alicdn.com') && 
+              (src.includes('_960x960') || 
+               src.includes('_750x') ||
+               src.includes('detail-desc'))
+            );
+        }
+      });
+      media = { images: media[0].result };
+    }
+
+    if (!media?.images?.length) {
+      throw new Error('No product images found. Try scrolling down.');
+    }
+
     renderMedia(media);
+
   } catch (error) {
+    console.error("Error:", error);
     container.innerHTML = `<p class="error">${error.message}</p>`;
   } finally {
     loading.style.display = 'none';
-    container.style.display = 'block';
     downloadBtn.disabled = false;
   }
 }

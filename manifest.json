@@ -16,9 +16,15 @@
       "*://*.aliexpress.com/*",
       "*://*.aliexpress.us/*",
       "*://*.alibaba.com/*",
-      "*://*.alicdn.com/*"
+      "*://*.alicdn.com/*",
+      "*://*.aliexpress.co.uk/*",
+      "*://*.aliexpress.ru/*",
+      "*://*.aliexpress.co.jp/*"
     ],
-    "js": ["content_script.js"]
+    "js": ["content_script.js"],
+    "run_at": "document_idle",
+    "all_frames": true,
+    "match_about_blank": true
   }],
   "background": {
     "service_worker": "background.js"
@@ -27,6 +33,9 @@
     "*://*.aliexpress.com/*",
     "*://*.aliexpress.us/*",
     "*://*.alibaba.com/*",
-    "*://*.alicdn.com/*"
+    "*://*.alicdn.com/*",
+    "*://*.aliexpress.co.uk/*",
+    "*://*.aliexpress.ru/*",
+    "*://*.aliexpress.co.jp/*"
   ]
 }
