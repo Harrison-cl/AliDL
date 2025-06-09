@@ -6,7 +6,8 @@ const MEDIA_DOMAINS = [
   'aliexpress.ru',
   'aliexpress.co.uk',
   'aliexpress.ca',
-  'alicdn.com'
+  'alicdn.com',
+  'aliexpress-media.com'
 ];
 
 function isSupportedSite(url) {
