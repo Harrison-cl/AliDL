@@ -6,6 +6,7 @@ const VIDEO_DOMAINS = {
     'alivideo.com',
     'alibaba.com',
     'aliexpress-media.com',
+    'videocdn.alibaba.com',
     'ailiexpress.ru',
     'aliexpress.us',
     'aliexpress.' // Catches all .com, .us, .ru, etc.
@@ -73,6 +74,13 @@ function addDownloadButton(video) {
             }
         });
     };
+
+    // temp console log for debugging
+    document.addEventListener('mouseover', (event) => {
+  console.log("Mouseover detected on:", event.target);
+  const video = event.target.closest('video');
+  if (video) console.log("Video found! SRC:", video.src);
+}, true);
 
     video.parentElement.style.position = 'relative'; // ensure parent has position
     video.parentElement.appendChild(btn);
