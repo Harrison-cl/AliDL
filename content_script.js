@@ -13,11 +13,34 @@ const VIDEO_DOMAINS = {
   ],
 }
 
+// check if url is Blob
+function isBlobUrl(url) {
+  return url.startsWith('blob:');
+}
+
+// handle blob URL videos 
+async function handleBlobVideo(video) {
+  try {
+    const blob = await fetch(video.src).then(r => r.blob());
+    const objectUrl = URL.createObjectURL(blob);
+    addDownloadButton(objectUrl, "video.mp4"); // Trigger download
+  } catch (error) {
+    console.error("Failed to fetch blob:", error);
+  }
+}
+
 // watch for mouseover events on video elements
 document.addEventListener('mouseover', (event) => {
     const video = event.target.closest('video');
     if(video && isAliExpressVideo(video.src)) {
-        addDownloadButton(video);
+        if(isBlobUrl(video.src)) {
+            // if video is a Blob URL, we can't download it directly
+            console.log("Blob video detected - fetching data...");
+            handleBlobVideo(video);
+        }else {
+            // normal video URL
+          addDownloadButton(video);
+    }
     }
 }, true); // use capture phase to catch dynamically loaded videos
 

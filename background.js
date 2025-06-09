@@ -11,3 +11,13 @@ chrome.runtime.onMessage.addListener((msg) => {
     });
   }
 });
+
+
+chrome.webRequest.onCompleted.addListener(
+  (details) => {
+    if (details.url.includes('.m3u8') || details.url.includes('.mp4')) {
+      chrome.tabs.sendMessage(details.tabId, { type: 'VIDEO_URL', url: details.url });
+    }
+  },
+  { urls: ["*://*.aliexpress.com/*"] }
+);
