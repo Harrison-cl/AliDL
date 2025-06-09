@@ -1,17 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "AliDL",
+  "name": "AliDL - Video Downloader",
   "version": "1.0.0",
+  "description": "Download videos from AliExpress and Alibaba",
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": "icon.png"
   },
   "permissions": [
     "activeTab",
-    "downloads",
-    "scripting",
-    "webRequest",
-    "storage"
+    "downloads"
   ],
   "content_scripts": [{
     "matches": [
@@ -21,16 +19,7 @@
       "*://*.alicdn.com/*",
       "*://*.aliexpress.co.uk/*",
       "*://*.aliexpress.ru/*",
-      "*://*.aliexpress.co.jp/*",
-      "*://*.aliexpress-media.com/*",
-      "*://*.videocdn.alibaba.com/*",
-      "*://gv.videocdn.alibaba.com/*",
-      "*://videocdn.alibaba.com/*",
-      "*://s.alicdn.com/*",
-      "*://ae01.alicdn.com/*",
-      "*://ae02.alicdn.com/*",
-      "*://ae03.alicdn.com/*",
-      "*://ae04.alicdn.com/*"
+      "*://*.aliexpress.co.jp/*"
     ],
     "js": ["content_script.js"],
     "css": ["content.css"],
@@ -47,15 +36,6 @@
     "*://*.alicdn.com/*",
     "*://*.aliexpress.co.uk/*",
     "*://*.aliexpress.ru/*",
-    "*://*.aliexpress.co.jp/*",
-    "*://*.aliexpress-media.com/*",
-    "*://*.videocdn.alibaba.com/*",
-    "*://gv.videocdn.alibaba.com/*",
-    "*://videocdn.alibaba.com/*",
-    "*://s.alicdn.com/*",
-    "*://ae01.alicdn.com/*",
-    "*://ae02.alicdn.com/*",
-    "*://ae03.alicdn.com/*",
-    "*://ae04.alicdn.com/*"
+    "*://*.aliexpress.co.jp/*"
   ]
 }

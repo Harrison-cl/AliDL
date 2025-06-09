@@ -1,56 +1,80 @@
 // content_script.js
 (function() {
-  // 1. Find all videos on page
-  const videos = document.querySelectorAll('video');
-  
-  // 2. Add download button to each
-  videos.forEach(video => {
-    if (video.dataset.alidlProcessed) return; // Skip if already processed
+  function addDownloadButton(video) {
+    if (video.dataset.alidlProcessed) return;
     video.dataset.alidlProcessed = true;
     
     const btn = document.createElement('button');
     btn.textContent = '⬇️ Download';
-    btn.style.cssText = `
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      z-index: 9999;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    `;
+    btn.className = 'alidl-download-btn';
+    
+    // Create a wrapper if the parent doesn't have relative positioning
+    let wrapper = video.parentElement;
+    if (getComputedStyle(wrapper).position === 'static') {
+      wrapper.style.position = 'relative';
+    }
+    
+    wrapper.appendChild(btn);
     
     btn.onclick = (e) => {
       e.stopPropagation();
-      downloadVideo(video.src);
+      e.preventDefault();
+      downloadVideo(video.src || video.currentSrc);
     };
-    
-    video.parentElement.style.position = 'relative';
-    video.parentElement.appendChild(btn);
-  });
+  }
 
-  // 3. Simple download function
-
-async function downloadVideo(url) {
-  if (url.startsWith('blob:')) {
-    try {
-      const blob = await fetch(url).then(r => r.blob());
-      url = URL.createObjectURL(blob);
-    } catch (e) {
-      alert('Failed to download blob video. Try right-clicking the video.');
+  async function downloadVideo(url) {
+    if (!url) {
+      alert('No video URL found');
       return;
     }
+    
+    if (url.startsWith('blob:')) {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const newUrl = URL.createObjectURL(blob);
+        const filename = `alivideo_${Date.now()}.mp4`;
+        chrome.runtime.sendMessage({ action: 'download', url: newUrl, filename });
+      } catch (e) {
+        console.error('Failed to download blob video:', e);
+        alert('Failed to download video. Try right-clicking the video.');
+      }
+    } else {
+      const filename = url.split('/').pop().split('?')[0] || `alivideo_${Date.now()}.mp4`;
+      chrome.runtime.sendMessage({ action: 'download', url, filename });
+    }
   }
-  const filename = url.split('/').pop().split('?')[0] || `video_${Date.now()}.mp4`;
-    chrome.runtime.sendMessage({ action: 'download', url, filename });
-}}
-)();
 
-new MutationObserver(() => {
-  document.querySelectorAll('video:not([data-alidl-processed])').forEach(video => {
-    // Re-run the button adder
+  // Process existing videos
+  function processVideos() {
+    const videos = document.querySelectorAll('video:not([data-alidl-processed])');
+    videos.forEach(addDownloadButton);
+  }
+
+  // Initial processing
+  processVideos();
+
+  // Watch for new videos being added
+  const observer = new MutationObserver((mutations) => {
+    let shouldProcess = false;
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(node => {
+        if (node.nodeType === 1) { // Element node
+          if (node.tagName === 'VIDEO' || node.querySelector('video')) {
+            shouldProcess = true;
+          }
+        }
+      });
+    });
+    
+    if (shouldProcess) {
+      processVideos();
+    }
   });
-}).observe(document.body, { childList: true, subtree: true });
+
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true 
+  });
+})();
