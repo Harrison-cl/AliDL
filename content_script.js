@@ -1,43 +1,45 @@
-// Function to add download buttons to videos
-function addDownloadButtons() {
-  const videos = document.querySelectorAll('video:not(.download-button-added)');
+// Create a floating download button
+function createDownloadButton(url) {
+  const btn = document.createElement('button');
+  btn.textContent = '↓ Download Video';
+  btn.style.position = 'fixed';
+  btn.style.bottom = '20px';
+  btn.style.right = '20px';
+  btn.style.zIndex = '999999';
+  btn.style.background = '#FF6A00';
+  btn.style.color = 'white';
+  btn.style.padding = '10px 15px';
+  btn.style.border = 'none';
+  btn.style.borderRadius = '4px';
+  btn.style.cursor = 'pointer';
   
-  videos.forEach(video => {
-    // Skip if already processed
-    if (video.classList.contains('download-button-added')) return;
-    
-    const button = document.createElement('button');
-    button.textContent = 'Download';
-    button.className = 'video-download-button';
+  btn.onclick = () => {
+    chrome.runtime.sendMessage({ action: "download", url });
+  };
   
-    //handle click
-     button.addEventListener('click', () => {
-      const source = video.src || (video.querySelector('source')?.src);
-      if (source) {
-        chrome.runtime.sendMessage({action: 'download', url: source});
-      }
-   });
+  document.body.appendChild(btn);
+  
+  // Auto-remove after 30 seconds
+  setTimeout(() => btn.remove(), 30000);
+}
 
-    // Add wrapper if needed for positioning
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'relative';
-    wrapper.style.display = 'inline-block';
-    
-    video.parentNode.insertBefore(wrapper, video);
-    wrapper.appendChild(video);
-    wrapper.appendChild(button);
-    
-    // Mark as processed
-    video.classList.add('download-button-added');
+// Listen for new videos from background
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === "NEW_VIDEO_FOUND") {
+    createDownloadButton(message.url);
+  }
+});
+
+// Optional: Also detect videos in page source
+function scanForVideoElements() {
+  document.querySelectorAll('video').forEach(video => {
+    const src = video.src || video.querySelector('source')?.src;
+    if (src && src.match(/\.(mp4|webm|mov|avi|m3u8)(\?|$)/i)) {
+      createDownloadButton(src);
+    }
   });
 }
 
-//initial run
-addDownloadButtons();
-
-//watch for dynamically added videos
-const observer = new MutationObserver(addDownloadButtons);
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
+// Run initial scan and periodically rescan
+scanForVideoElements();
+setInterval(scanForVideoElements, 5000);

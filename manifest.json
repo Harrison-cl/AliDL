@@ -10,7 +10,6 @@
   "permissions": [
     "activeTab",
     "downloads",
-    "scripting",
     "webRequest"
   ],
   "content_scripts": [{
@@ -28,7 +27,7 @@
     ],
     "js": ["content_script.js"],
     "css": ["content.css"],
-    "run_at": "document_idle"
+    "run_at": "document_start"
   }],
   "background": {
     "service_worker": "background.js"
