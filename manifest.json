@@ -10,7 +10,8 @@
   "permissions": [
     "activeTab",
     "downloads",
-    "scripting"
+    "scripting",
+    "webRequest"
   ],
   "content_scripts": [{
     "matches": [
@@ -20,7 +21,10 @@
       "*://*.alicdn.com/*",
       "*://*.aliexpress.co.uk/*",
       "*://*.aliexpress.ru/*",
-      "*://*.aliexpress.co.jp/*"
+      "*://*.aliexpress.co.jp/*",
+      "*://*.aliexpress.com/item/*",
+      "*://*.alibaba.com/product-detail/*",
+      "*://*.aliexpress.us/item/*"
     ],
     "js": ["content_script.js"],
     "css": ["content.css"],
@@ -36,6 +40,7 @@
     "*://*.alicdn.com/*",
     "*://*.aliexpress.co.uk/*",
     "*://*.aliexpress.ru/*",
-    "*://*.aliexpress.co.jp/*"
+    "*://*.aliexpress.co.jp/*",
+    "*://*.aliexpress.us/item/*"
   ]
 }
