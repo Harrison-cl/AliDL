@@ -1,45 +1,38 @@
-// Create a floating download button
-function createDownloadButton(url) {
-  const btn = document.createElement('button');
-  btn.textContent = '↓ Download Video';
-  btn.style.position = 'fixed';
-  btn.style.bottom = '20px';
-  btn.style.right = '20px';
-  btn.style.zIndex = '999999';
-  btn.style.background = '#FF6A00';
-  btn.style.color = 'white';
-  btn.style.padding = '10px 15px';
-  btn.style.border = 'none';
-  btn.style.borderRadius = '4px';
-  btn.style.cursor = 'pointer';
+// Find all videos on the page
+function findVideos() {
+  const videos = [];
   
-  btn.onclick = () => {
-    chrome.runtime.sendMessage({ action: "download", url });
-  };
+  // Check direct video elements
+  document.querySelectorAll('video').forEach(video => {
+    const src = video.src || (video.querySelector('source')?.src);
+    if (src) {
+      videos.push({
+        url: src.startsWith('//') ? `https:${src}` : src,
+        element: video
+      });
+    }
+  });
   
-  document.body.appendChild(btn);
-  
-  // Auto-remove after 30 seconds
-  setTimeout(() => btn.remove(), 30000);
+  return videos;
 }
 
-// Listen for new videos from background
-chrome.runtime.onMessage.addListener((message) => {
-  if (message.type === "NEW_VIDEO_FOUND") {
-    createDownloadButton(message.url);
+// Send videos to popup when requested
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "getVideos") {
+    sendResponse({videos: findVideos()});
   }
 });
 
-// Optional: Also detect videos in page source
-function scanForVideoElements() {
-  document.querySelectorAll('video').forEach(video => {
-    const src = video.src || video.querySelector('source')?.src;
-    if (src && src.match(/\.(mp4|webm|mov|avi|m3u8)(\?|$)/i)) {
-      createDownloadButton(src);
-    }
-  });
-}
-
-// Run initial scan and periodically rescan
-scanForVideoElements();
-setInterval(scanForVideoElements, 5000);
+// Optional: Add a small indicator in the page
+const indicator = document.createElement('div');
+indicator.textContent = 'Video Downloader Ready';
+indicator.style.position = 'fixed';
+indicator.style.bottom = '10px';
+indicator.style.right = '10px';
+indicator.style.background = '#FF6A00';
+indicator.style.color = 'white';
+indicator.style.padding = '4px 8px';
+indicator.style.borderRadius = '4px';
+indicator.style.fontSize = '12px';
+indicator.style.zIndex = '9999';
+document.body.appendChild(indicator);

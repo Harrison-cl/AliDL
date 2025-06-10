@@ -10,7 +10,8 @@
   "permissions": [
     "activeTab",
     "downloads",
-    "webRequest"
+    "webRequest",
+    "storage"
   ],
   "content_scripts": [{
     "matches": [
