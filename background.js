@@ -24,7 +24,7 @@ chrome.webRequest.onCompleted.addListener(
   { urls: ["<all_urls>"] }
 );
 
-// Handle blob URLs
+// Handle blob URLs Doesnt work. gives error.
 chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
     if (details.url.startsWith('blob:')) {
